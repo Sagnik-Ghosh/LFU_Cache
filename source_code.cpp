@@ -1,18 +1,7 @@
 #include <bits/stdc++.h>
+# include "Node.h"
 
 using namespace std;
-
-class Node {
-public:
-    int key, value, frequency;
-    Node *previous, *next;
-
-    Node(int key, int value) {
-        this->key = key;
-        this->value = value;
-        frequency = 1;
-    }
-};
 
 class frequencyList {
 public:
