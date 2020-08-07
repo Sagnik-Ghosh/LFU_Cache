@@ -1,38 +1,24 @@
 #include <bits/stdc++.h>
-# include "Node.h"
+#include "FrequencyList.h"
 
 using namespace std;
 
-class frequencyList {
-public:
-    Node *head, *tail;
-    int len;
+void frequencyList::addHead(Node *node) {
+    Node *currentHead = head->next;
+    head->next = node;
+    node->previous = head;
+    node->next = currentHead;
+    currentHead->previous = node;
+    len++;
+}
 
-    frequencyList() {
-        head = new Node(0, 0);
-        tail = new Node(0, 0);
-        head->next = tail;
-        tail->previous = head;
-        len = 0;
-    }
-
-    void addHead(Node *node) {
-        Node *currentHead = head->next;
-        head->next = node;
-        node->previous = head;
-        node->next = currentHead;
-        currentHead->previous = node;
-        len++;
-    }
-
-    void remove(Node *node) {
-        Node *previousNode = node->previous;
-        Node *nextNode = node->next;
-        previousNode->next = nextNode;
-        nextNode->previous = previousNode;
-        len--;
-    }
-};
+void frequencyList::remove(Node *node) {
+    Node *previousNode = node->previous;
+    Node *nextNode = node->next;
+    previousNode->next = nextNode;
+    nextNode->previous = previousNode;
+    len--;
+}
 
 class LFUCache {
 public:
