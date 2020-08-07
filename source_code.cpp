@@ -1,5 +1,5 @@
 #include <bits/stdc++.h>
-#include "FrequencyList.h"
+#include "LFUCache.h"
 
 using namespace std;
 
@@ -20,23 +20,27 @@ void frequencyList::remove(Node *node) {
     len--;
 }
 
-class LFUCache {
-public:
-
-    unordered_map<int, frequencyList *> frequency;
-    unordered_map<int, Node *> mapped_values;
-    int capacity, size;
-    int minFreq;
-
-    LFUCache(int capacity) {
-        this->capacity = capacity;
-        size = 0;
-        minFreq = 0;
+int LFUCache::get(int key) {
+    if (mapped_values.find(key) == mapped_values.end())
+        return -1;
+    Node *currentNode = mapped_values[key];
+    frequency[currentNode->frequency]->remove(currentNode);
+    if (minFreq == currentNode->frequency and frequency[currentNode->frequency]->len == 0) {
+        minFreq++;
+        frequency.erase(currentNode->frequency);
     }
+    currentNode->frequency++;
+    if (frequency.find(currentNode->frequency) == frequency.end()) {
+        frequency[currentNode->frequency] = new frequencyList();
+    }
+    frequency[currentNode->frequency]->addHead(currentNode);
+    mapped_values[key] = currentNode;
+    return currentNode->value;
+}
 
-    int get(int key) {
-        if (mapped_values.find(key) == mapped_values.end())
-            return -1;
+void LFUCache::put(int key, int value) {
+    if (capacity <= 0)return;
+    if (mapped_values.find(key) != mapped_values.end()) {
         Node *currentNode = mapped_values[key];
         frequency[currentNode->frequency]->remove(currentNode);
         if (minFreq == currentNode->frequency and frequency[currentNode->frequency]->len == 0) {
@@ -44,68 +48,49 @@ public:
             frequency.erase(currentNode->frequency);
         }
         currentNode->frequency++;
+        currentNode->value = value;
         if (frequency.find(currentNode->frequency) == frequency.end()) {
             frequency[currentNode->frequency] = new frequencyList();
         }
         frequency[currentNode->frequency]->addHead(currentNode);
         mapped_values[key] = currentNode;
-        return currentNode->value;
+        return;
     }
+    size++;
+    if (size > capacity) {
+        Node *evictedNode = frequency[minFreq]->tail->previous;
+        mapped_values.erase(evictedNode->key);
+        frequency[minFreq]->remove(evictedNode);
+        if (frequency[minFreq]->len == 0)
+            frequency.erase(minFreq);
+        --size;
+    }
+    Node *currentNode = new Node(key, value);
+    if (frequency.find(1) == frequency.end()) {
+        frequency[1] = new frequencyList();
+        minFreq = 1;
+    }
+    frequency[1]->addHead(currentNode);
+    mapped_values[key] = currentNode;
+}
 
-    void put(int key, int value) {
-        if (capacity <= 0)return;
-        if (mapped_values.find(key) != mapped_values.end()) {
-            Node *currentNode = mapped_values[key];
-            frequency[currentNode->frequency]->remove(currentNode);
-            if (minFreq == currentNode->frequency and frequency[currentNode->frequency]->len == 0) {
-                minFreq++;
-                frequency.erase(currentNode->frequency);
-            }
-            currentNode->frequency++;
-            currentNode->value = value;
-            if (frequency.find(currentNode->frequency) == frequency.end()) {
-                frequency[currentNode->frequency] = new frequencyList();
-            }
-            frequency[currentNode->frequency]->addHead(currentNode);
-            mapped_values[key] = currentNode;
-            return;
-        }
-        size++;
-        if (size > capacity) {
-            Node *evictedNode = frequency[minFreq]->tail->previous;
-            mapped_values.erase(evictedNode->key);
-            frequency[minFreq]->remove(evictedNode);
-            if (frequency[minFreq]->len == 0)
-                frequency.erase(minFreq);
-            --size;
-        }
-        Node *currentNode = new Node(key, value);
-        if (frequency.find(1) == frequency.end()) {
-            frequency[1] = new frequencyList();
-            minFreq = 1;
-        }
-        frequency[1]->addHead(currentNode);
-        mapped_values[key] = currentNode;
+void LFUCache::displayCache() {
+    if (mapped_values.empty()) {
+        cout << "Cache is empty\n" << flush;
+        return;
     }
+    cout << "BlockNumber\tValue\n" << flush;
+    for (auto data : mapped_values) {
+        cout << data.first << "\t\t" << data.second->value << "\n" << flush;
+    }
+}
 
-    void displayCache() {
-        if (mapped_values.empty()) {
-            cout << "Cache is empty\n" << flush;
-            return;
-        }
-        cout << "BlockNumber\tValue\n" << flush;
-        for (auto data : mapped_values) {
-            cout << data.first << "\t\t" << data.second->value << "\n" << flush;
-        }
-    }
-
-    void clearCache() {
-        minFreq = 0;
-        size = 0;
-        mapped_values.clear();
-        frequency.clear();
-    }
-};
+void LFUCache::clearCache() {
+    minFreq = 0;
+    size = 0;
+    mapped_values.clear();
+    frequency.clear();
+}
 
 int main() {
     int capacity, blockNumber, Value;
