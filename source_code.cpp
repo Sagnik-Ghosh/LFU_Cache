@@ -20,9 +20,7 @@ void frequencyList::remove(Node *node) {
     len--;
 }
 
-int LFUCache::get(int key) {
-    if (mapped_values.find(key) == mapped_values.end())
-        return -1;
+void LFUCache::incrementFrequency(int key, int value = -1, char c = 'g') {
     Node *currentNode = mapped_values[key];
     frequency[currentNode->frequency]->remove(currentNode);
     if (minFreq == currentNode->frequency and frequency[currentNode->frequency]->len == 0) {
@@ -33,27 +31,22 @@ int LFUCache::get(int key) {
     if (frequency.find(currentNode->frequency) == frequency.end()) {
         frequency[currentNode->frequency] = new frequencyList();
     }
+    if (c == 'p')currentNode->value = value;
     frequency[currentNode->frequency]->addHead(currentNode);
     mapped_values[key] = currentNode;
-    return currentNode->value;
+}
+
+int LFUCache::get(int key) {
+    if (mapped_values.find(key) == mapped_values.end())
+        return -1;
+    incrementFrequency(key);
+    return mapped_values[key]->value;
 }
 
 void LFUCache::put(int key, int value) {
     if (capacity <= 0)return;
     if (mapped_values.find(key) != mapped_values.end()) {
-        Node *currentNode = mapped_values[key];
-        frequency[currentNode->frequency]->remove(currentNode);
-        if (minFreq == currentNode->frequency and frequency[currentNode->frequency]->len == 0) {
-            minFreq++;
-            frequency.erase(currentNode->frequency);
-        }
-        currentNode->frequency++;
-        currentNode->value = value;
-        if (frequency.find(currentNode->frequency) == frequency.end()) {
-            frequency[currentNode->frequency] = new frequencyList();
-        }
-        frequency[currentNode->frequency]->addHead(currentNode);
-        mapped_values[key] = currentNode;
+        incrementFrequency(key, value, 'p');
         return;
     }
     size++;

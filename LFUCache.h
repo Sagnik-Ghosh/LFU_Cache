@@ -24,4 +24,6 @@ public:
     void displayCache();
 
     void clearCache();
+
+    void incrementFrequency(int key, int value, char c);
 };
